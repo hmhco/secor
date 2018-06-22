@@ -157,7 +157,7 @@ public class ZookeeperConnector {
             try {
                 zookeeper.create(prefix, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
                 LOG.info("created path {}", prefix);
-            } catch (KeeperException.NodeExistsException exception) {
+            } catch (KeeperException.NodeExistsException | KeeperException.NoAuthException exception) {
             }
         }
     }
