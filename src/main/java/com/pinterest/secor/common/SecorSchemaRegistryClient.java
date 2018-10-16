@@ -50,9 +50,9 @@ public class SecorSchemaRegistryClient {
         System.out.println("decodedMessage topic["+topic+"] schema["+schema+"] magicByte["+ magicByte +"]");
         Schema schema1 = schemas.get(topic);
         if(schemas.containsKey(topic)){
-            System.out.println("schemas already contains topic["+topic+"] schema["+schema1+"]");
+            System.out.println("schemas already contains topic["+topic+"] schema["+schema1+"] overwriting it with schema["+schema+"]");
         }
-//        System.out.println("Adding schema["+schema1+"]  magicByte["+ magicByte +"] topic["+topic+"]");
+        System.out.println("Adding schema["+schema1+"]  magicByte["+ magicByte +"] topic["+topic+"]");
 //        schemas.put(topic, schema);
         return record;
     }
