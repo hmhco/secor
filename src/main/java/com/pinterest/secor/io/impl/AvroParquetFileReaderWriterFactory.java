@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFactory {
@@ -80,12 +81,24 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return reader.read(null, decoder);
     }
 
+
+    private String getMagicByte(byte [] bytes){
+        return bytes[0]+" "+bytes[1]+" "+bytes[2]+" "+bytes[3]+" "+bytes[4];
+    }
+
+    private String getPayload(byte [] bytes){
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
     protected GenericRecord decodeMessage(byte[] value, String topic, SpecificDatumReader<GenericRecord> reader) throws IOException {
         // Avro schema registry header format is a "Magic Byte" that equals 0 followed by a 4-byte int
         // https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#wire-format
+
         if (value.length > 5 && value[0] == 0) {
+            System.out.println("AP decodeMessage topic["+topic+"] calling decodeMessage getMagicByte[" + getMagicByte(value) + "] payload[" + getPayload(value)+"]");
             return schemaRegistryClient.decodeMessage(topic, value);
         } else {
+            System.out.println("AP decodeMessage topic["+topic+"] calling deserializeAvroRecord payload[" + getPayload(value)+"]");
             return deserializeAvroRecord(reader, value);
         }
     }
@@ -141,6 +154,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         private ParquetWriter writer;
         private String topic;
         private SpecificDatumReader<GenericRecord> datumReader;
+        private Schema schema;
 
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
@@ -148,10 +162,11 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
-            Schema schema = getSchema(topic);
+            schema = getSchema(topic);
             datumReader = new SpecificDatumReader<>(schema);
 
             // Not setting blockSize, pageSize, enableDictionary, and validating
+            System.out.println("AvroParquetFileWriter schema["+schema+"]");
             writer = AvroParquetWriter.builder(path)
                     .withSchema(schema)
                     .withCompressionCodec(codecName)
@@ -163,12 +178,18 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             return writer.getDataSize();
         }
 
+
+
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            GenericRecord record = decodeMessage(keyValue.getValue(), topic, datumReader);
+            byte[] value = keyValue.getValue();
+            GenericRecord record = decodeMessage(value, topic, datumReader);
+            System.out.println("AP decodeMessage topic["+topic+"] record["+record+"] payload["+getPayload(value)+"]");
+
             LOG.trace("Writing record {}", record);
             if (record != null){
                 try {
+                    System.out.println("AP write["+writer+"] schema["+this.schema+"] payload["+getPayload(value)+"]");
                     writer.write(record);
                 } catch (ArrayIndexOutOfBoundsException e) {
                     LOG.warn("Skipping this record of missing timestamp field {}", record);

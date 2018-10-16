@@ -39,9 +39,20 @@ public class SecorSchemaRegistryClient {
         decoder = new KafkaAvroDecoder(schemaRegistryClient);
     }
 
+    private String getMagicByte(byte [] bytes){
+        return bytes[0]+" "+bytes[1]+" "+bytes[2]+" "+bytes[3]+" "+bytes[4];
+    }
+
     public GenericRecord decodeMessage(String topic, byte[] message) {
         GenericRecord record = (GenericRecord) decoder.fromBytes(message);
         Schema schema = record.getSchema();
+        String magicByte = getMagicByte(message);
+        System.out.println("decodedMessage topic["+topic+"] schema["+schema.toString()+"] magicByte["+ magicByte +"]");
+        Schema schema1 = schemas.get(topic);
+        if(schemas.containsKey(topic)){
+            System.out.println("schemas already contains topic["+topic+"] schema["+schema1.toString()+"] overwriting it with schema["+schema.toString()+"]");
+        }
+        System.out.println("Adding schema["+schema1.toString()+"]  magicByte["+ magicByte +"] topic["+topic+"]");
         schemas.put(topic, schema);
         return record;
     }
@@ -55,12 +66,14 @@ public class SecorSchemaRegistryClient {
                 throw new IllegalStateException("Avro schema not found for topic " + topic);
             }
         }
+        System.out.println("getSchema topic["+topic+"] schema["+schema.toString()+"]");
         return schema;
     }
 
     private Schema lookupSchema(String topic) throws IOException, RestClientException {
         String schema_string = schemaRegistryClient.getLatestSchemaMetadata(topic).getSchema();
         Schema schema = (new Schema.Parser()).parse(schema_string);
+        System.out.println("lookupSchema topic["+topic+"] schema["+schema.toString()+"] schema_string["+schema_string+"]");
         schemas.put(topic, schema);
         return schema;
     }
