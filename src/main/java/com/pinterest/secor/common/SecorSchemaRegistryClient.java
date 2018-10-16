@@ -53,7 +53,7 @@ public class SecorSchemaRegistryClient {
             System.out.println("schemas already contains topic["+topic+"] schema["+schema1+"] overwriting it with schema["+schema+"]");
         }
         System.out.println("Adding schema["+schema1+"]  magicByte["+ magicByte +"] topic["+topic+"]");
-//        schemas.put(topic, schema);
+        schemas.put(topic, schema);
         return record;
     }
 
@@ -70,7 +70,7 @@ public class SecorSchemaRegistryClient {
         return schema;
     }
 
-    public Schema lookupSchema(String topic) throws IOException, RestClientException {
+    private Schema lookupSchema(String topic) throws IOException, RestClientException {
         String schema_string = schemaRegistryClient.getLatestSchemaMetadata(topic).getSchema();
         Schema schema = (new Schema.Parser()).parse(schema_string);
         System.out.println("lookupSchema topic["+topic+"] schema["+schema+"] schema_string["+schema_string+"]");
