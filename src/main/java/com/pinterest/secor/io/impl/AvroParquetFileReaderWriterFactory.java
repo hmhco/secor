@@ -196,7 +196,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
                             .withSchema(schema)
                             .withCompressionCodec(codecName)
                             .build();
-                    System.out.println("AP write["+writer+"] schema["+this.schema+"] payload["+getPayload(value)+"]");
+                    System.out.println("AP write["+writer+"] schema["+schema+"] topic["+topic+"] path["+path+"] record["+record+"] payload["+getPayload(value)+"]");
                     writer.write(record);
                 } catch (ArrayIndexOutOfBoundsException e) {
                     LOG.warn("Skipping this record of missing timestamp field {}", record);
