@@ -47,12 +47,12 @@ public class SecorSchemaRegistryClient {
         GenericRecord record = (GenericRecord) decoder.fromBytes(message);
         Schema schema = record.getSchema();
         String magicByte = getMagicByte(message);
-        System.out.println("decodedMessage topic["+topic+"] schema["+schema.toString()+"] magicByte["+ magicByte +"]");
+        System.out.println("decodedMessage topic["+topic+"] schema["+schema+"] magicByte["+ magicByte +"]");
         Schema schema1 = schemas.get(topic);
         if(schemas.containsKey(topic)){
-            System.out.println("schemas already contains topic["+topic+"] schema["+schema1.toString()+"] overwriting it with schema["+schema.toString()+"]");
+            System.out.println("schemas already contains topic["+topic+"] schema["+schema1+"] overwriting it with schema["+schema+"]");
         }
-        System.out.println("Adding schema["+schema1.toString()+"]  magicByte["+ magicByte +"] topic["+topic+"]");
+        System.out.println("Adding schema["+schema1+"]  magicByte["+ magicByte +"] topic["+topic+"]");
         schemas.put(topic, schema);
         return record;
     }
@@ -66,14 +66,14 @@ public class SecorSchemaRegistryClient {
                 throw new IllegalStateException("Avro schema not found for topic " + topic);
             }
         }
-        System.out.println("getSchema topic["+topic+"] schema["+schema.toString()+"]");
+        System.out.println("getSchema topic["+topic+"] schema["+schema+"]");
         return schema;
     }
 
     private Schema lookupSchema(String topic) throws IOException, RestClientException {
         String schema_string = schemaRegistryClient.getLatestSchemaMetadata(topic).getSchema();
         Schema schema = (new Schema.Parser()).parse(schema_string);
-        System.out.println("lookupSchema topic["+topic+"] schema["+schema.toString()+"] schema_string["+schema_string+"]");
+        System.out.println("lookupSchema topic["+topic+"] schema["+schema+"] schema_string["+schema_string+"]");
         schemas.put(topic, schema);
         return schema;
     }
