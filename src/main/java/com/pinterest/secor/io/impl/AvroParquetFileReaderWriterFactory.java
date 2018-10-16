@@ -155,11 +155,13 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         private String topic;
         private SpecificDatumReader<GenericRecord> datumReader;
         private Schema schema;
+        private Path path;
+        private CompressionCodecName codecName;
 
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
-            Path path = new Path(logFilePath.getLogFilePath());
+            path = new Path(logFilePath.getLogFilePath());
             LOG.debug("Creating Brand new Writer for path {}", path);
-            CompressionCodecName codecName = CompressionCodecName
+            codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
             schema = getSchema(topic);
@@ -167,10 +169,10 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
             // Not setting blockSize, pageSize, enableDictionary, and validating
             System.out.println("AvroParquetFileWriter schema["+schema+"]");
-            writer = AvroParquetWriter.builder(path)
-                    .withSchema(schema)
-                    .withCompressionCodec(codecName)
-                    .build();
+//            writer = AvroParquetWriter.builder(path)
+//                    .withSchema(schema)
+//                    .withCompressionCodec(codecName)
+//                    .build();
         }
 
         @Override
@@ -189,6 +191,11 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             LOG.trace("Writing record {}", record);
             if (record != null){
                 try {
+                    Schema schema = record.getSchema();
+                    writer = AvroParquetWriter.builder(path)
+                            .withSchema(schema)
+                            .withCompressionCodec(codecName)
+                            .build();
                     System.out.println("AP write["+writer+"] schema["+this.schema+"] payload["+getPayload(value)+"]");
                     writer.write(record);
                 } catch (ArrayIndexOutOfBoundsException e) {
