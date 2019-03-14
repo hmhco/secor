@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFactory {
@@ -136,11 +137,17 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
     }
 
+    private String getPayload(byte [] bytes){
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
     protected class AvroParquetFileWriter implements FileWriter {
 
         private ParquetWriter writer;
         private String topic;
         private SpecificDatumReader<GenericRecord> datumReader;
+
+        private Schema schemaCopy;
 
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
@@ -149,6 +156,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
             Schema schema = getSchema(topic);
+            schemaCopy = schema;
             datumReader = new SpecificDatumReader<>(schema);
 
             // Not setting blockSize, pageSize, enableDictionary, and validating
@@ -165,13 +173,19 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            GenericRecord record = decodeMessage(keyValue.getValue(), topic, datumReader);
+            byte[] value = keyValue.getValue();
+            GenericRecord record = decodeMessage(value, topic, datumReader);
             LOG.trace("Writing record {}", record);
+            String payload = getPayload(value);
+            System.out.println("AP decodeMessage topic["+topic+"] record["+record+"] payload["+ payload +"]");
             if (record != null){
                 try {
+                    System.out.println("AP write["+writer+"] schemaCopy["+schemaCopy+"] payload["+ payload +"]");
                     writer.write(record);
                 } catch (ArrayIndexOutOfBoundsException e) {
-                    LOG.warn("Skipping this record of missing timestamp field {}", record);
+                    LOG.warn("SECOR-EXCEPTION1 Skipping this record of missing timestamp field {}", record);
+                } catch (Exception e){
+                    System.out.println("SECOR-EXCEPTION2 Exception ["+e.getMessage()+"] payload["+ payload +"]");
                 }
             }
         }
