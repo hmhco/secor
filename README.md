@@ -1,3 +1,18 @@
+# Secor - Decommissioned March 2019
+(HMH) Secor has been shutdown since March 2019.
+
+On 7th March 2019 Secor began to only partially save events from one specific topic in Cert `hmheng-ds.cert.events.user.session.schema.edanalytics.edevents.userContentSession` and runscope tests started alerting this issue. 
+
+(Note this runscope test passed in INT, so it appears to be an Cert only issue)
+
+
+Logs was put into Secor and it was confirmed that events were making it into Secor but randomly only a portion was coming out and being written to parquet files. More details on this investigation can be found here:  https://jira.hmhco.com/browse/DS-635   
+
+Discussed this issue with Ed Analytics team during Stand Up with team on 14th March - we confirmed that Parquet is not used by any one at the moment and that Ed Analytics' data strategy is to use Parquet further down stream compared to where it is now. i.e. generated parquet files from the avro files in S3.
+
+It was decided to shutdown Secor given that there would be no impact to anyone. Story  https://jira.hmhco.com/browse/DS-678 deals with the decommissioning of Secor.
+
+
 # Pinterest Secor
 
 [![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
